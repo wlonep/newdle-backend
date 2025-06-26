@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Post} from '@nestjs/common';
+import {Body, Controller, Get, NotFoundException, Param, Post} from '@nestjs/common';
 import {AnswerService} from "./answer.service";
 
 
@@ -6,14 +6,31 @@ import {AnswerService} from "./answer.service";
 export class AnswerController {
     constructor(private readonly quizSvc: AnswerService) {}
 
-    @Get('today')
-    getTodayQuiz() {
-        return this.quizSvc.getTodayQuiz();
+    @Get('today/:length')
+    getTodayQuiz(@Param('length') length: string) {
+        switch (length) {
+            case 'short':
+                return this.quizSvc.getTodayQuiz('short');
+            case 'normal':
+                return this.quizSvc.getTodayQuiz('normal');
+            case 'long':
+                return this.quizSvc.getTodayQuiz('long');
+            default:
+                throw new NotFoundException('Invalid length parameter.');
+        }
     }
 
-    @Post('answer')
-    check(@Body() body: { date: string; answer: string }) {
-        const correct = this.quizSvc.checkAnswer(body.date, body.answer);
-        return { correct };
+    @Post('answer/:length')
+    check(@Body() body: { answer: string }, @Param('length') length: string, ) {
+        switch (length) {
+            case 'short':
+                return this.quizSvc.checkAnswer(body.answer, 'short');
+            case 'normal':
+                return this.quizSvc.checkAnswer(body.answer, 'normal');
+            case 'long':
+                return this.quizSvc.checkAnswer(body.answer, 'long');
+            default:
+                throw new NotFoundException('Invalid length parameter.');
+        }
     }
 }

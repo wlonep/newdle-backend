@@ -10,41 +10,63 @@ export interface WordEntry {
 
 @Injectable()
 export class WordService implements OnModuleInit {
-    private data: Record<string, { word: string; definition: string }> = {};
+    private shortData: Record<string, WordEntry> = {};
+    private normalData: Record<string, WordEntry> = {};
+    private longData: Record<string, WordEntry> = {};
     private readonly stdDate = new Date('2025-06-01');
     private readonly msPerDay = 1000 * 60 * 60 * 24;
 
     async onModuleInit() {
-        const file = await fs.readFile(
-            './src/assets/words_6.json',
-            'utf-8',
-        );
-        this.data = JSON.parse(file);
+        const [shortRaw, normalRaw, longRaw] = await Promise.all([
+            fs.readFile('./src/assets/words_4.json', 'utf-8'),
+            fs.readFile('./src/assets/words_6.json', 'utf-8'),
+            fs.readFile('./src/assets/words_12.json', 'utf-8'),
+        ]);
+
+        this.shortData = JSON.parse(shortRaw);
+        this.normalData = JSON.parse(normalRaw);
+        this.longData = JSON.parse(longRaw);
     }
 
-    getAllKeys(): string[] {
-        return Object.keys(this.data);
+    getKeys(size: 'short' | 'normal' | 'long'): string[] {
+        if (size === 'short') return Object.keys(this.shortData);
+        if (size === 'long') return Object.keys(this.longData);
+        return Object.keys(this.normalData);
     }
 
-    getByIndex(idx: number): WordEntry | null {
-        const key = this.getAllKeys()[idx];
-        return key ? {jamo_key: key, ...this.data[key]} : null;
+    getByKey(key: string, size: 'short' | 'normal' | 'long' = 'normal'): WordEntry | null {
+        const data =
+            size === 'short'
+                ? this.shortData
+                : size === 'long'
+                    ? this.longData
+                    : this.normalData;
+        return data[key] ?? null;
     }
 
-    getByDate(dateStr: string): WordEntry {
+    getByIndex(idx: number, size: 'short' | 'normal' | 'long' = 'normal'): WordEntry | null {
+        const keys = this.getKeys(size);
+        const key = keys[idx];
+        const entry = key ? this.getByKey(key, size) : null;
+
+        return entry ? {...entry, jamo_key: key} : null;
+    }
+
+    getByDate(dateStr: string, size: 'short' | 'normal' | 'long'): WordEntry {
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) {
-            throw new NotFoundException('잘못된 날짜 형식입니다.');
+            throw new NotFoundException('Invalid date type.');
         }
 
         const idx = Math.floor(
             (date.getTime() - this.stdDate.getTime()) / this.msPerDay,
         );
 
-        const entry = this.getByIndex(idx);
+        const entry = this.getByIndex(idx, size);
         if (!entry) {
-            throw new NotFoundException('해당 날짜에 대응하는 단어가 없습니다.');
+            throw new NotFoundException('Word not found.');
         }
+
         return entry;
     }
 }

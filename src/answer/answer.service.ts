@@ -11,22 +11,25 @@ export class AnswerService {
         return createHash('sha256').update(answer + salt).digest('hex');
     }
 
-    getTodayQuiz() {
+    getTodayQuiz(size: 'short' | 'normal' | 'long') {
         const todayISO = new Date().toISOString().split('T')[0];
-        const entry = this.wordSvc.getByDate(todayISO);
+        const entry = this.wordSvc.getByDate(todayISO, size);
 
         const salt = todayISO;
         const answerHash = this.hashAnswer(entry.jamo_key, salt);
 
-        return {salt, answerHash};
+        return {size, salt, answerHash};
     }
 
-    checkAnswer(date: string, userAnswer: string) {
-        const entry = this.wordSvc.getByDate(date);
-        const correct = this.hashAnswer(userAnswer, date) === this.hashAnswer(entry.jamo_key, date);
+    checkAnswer(userAnswer: string, size: 'short' | 'normal' | 'long') {
+        const todayISO = new Date().toISOString().split('T')[0];
+        const entry = this.wordSvc.getByDate(todayISO, size);
+        const correct = this.hashAnswer(userAnswer, todayISO) === this.hashAnswer(entry.jamo_key, todayISO);
+
         if (correct) {
             return {
                 correct: true,
+                size,
                 jamo_key: entry.jamo_key,
                 word: entry.word,
                 definition: entry.definition
