@@ -21,14 +21,14 @@ export class AnswerController {
     }
 
     @Post('answer/:length')
-    check(@Body() body: { answer: string }, @Param('length') length: string, ) {
+    check(@Body() body: { answer: string, last?: boolean }, @Param('length') length: string, ) {
         switch (length) {
             case 'short':
-                return this.quizSvc.checkAnswer(body.answer, 'short');
+                return this.quizSvc.checkAnswer(body, 'short');
             case 'normal':
-                return this.quizSvc.checkAnswer(body.answer, 'normal');
+                return this.quizSvc.checkAnswer(body, 'normal');
             case 'long':
-                return this.quizSvc.checkAnswer(body.answer, 'long');
+                return this.quizSvc.checkAnswer(body, 'long');
             default:
                 throw new NotFoundException('Invalid length parameter.');
         }

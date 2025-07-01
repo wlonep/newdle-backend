@@ -6,6 +6,7 @@ export interface WordEntry {
     jamo_key: string;
     word: string;
     definition: string;
+    id?: number;
 }
 
 @Injectable()
@@ -67,6 +68,6 @@ export class WordService implements OnModuleInit {
             throw new NotFoundException('Word not found.');
         }
 
-        return entry;
+        return {...entry, id: idx};
     }
 }

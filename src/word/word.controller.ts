@@ -1,9 +1,15 @@
 import {Controller, Get, NotFoundException, Param} from '@nestjs/common';
-import { WordService } from './word.service';
+import {WordService} from './word.service';
 
 @Controller('/api')
 export class WordController {
-    constructor(private readonly wordService: WordService) {}
+    constructor(private readonly wordService: WordService) {
+    }
+
+    @Get()
+    getRoot() {
+        return {message: 'Hello World!'};
+    }
 
     @Get('/list/:length')
     async getWordList(@Param('length') length: string) {
@@ -19,17 +25,8 @@ export class WordController {
         }
     }
 
-    @Get('/test/:length')
-    async test(@Param('length') length: string) {
-        switch (length) {
-            case 'short':
-                return this.wordService.getByDate('2025-06-26', 'short');
-            case 'normal':
-                return this.wordService.getByDate('2025-06-26', 'normal');
-            case 'long':
-                return this.wordService.getByDate('2025-06-26', 'long');
-            default:
-                throw new NotFoundException('Invalid length parameter.');
-        }
+    @Get('/time')
+    getServerTime() {
+        return new Date().toLocaleString('sv-SE').split(' ')[0];
     }
 }
